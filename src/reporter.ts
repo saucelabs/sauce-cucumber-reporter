@@ -273,7 +273,7 @@ class SauceReporter extends SummaryFormatter {
       name: args.suiteName,
       startTime: args.startedAt,
       endTime: args.endedAt,
-      framework: 'playwright',
+      framework: 'cucumber',
       frameworkVersion: args.cucumberVersion,
       suite: args.suiteName,
       passed: args.success,
