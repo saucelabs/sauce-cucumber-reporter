@@ -1,0 +1,41 @@
+{
+  "name": "@saucelabs/cucumber-reporter",
+  "version": "0.1.0",
+  "description": "Reports your tests to Sauce Labs",
+  "main": "lib/reporter.js",
+  "files": [
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "test": "jest",
+    "build": "babel --extensions '.ts' src --out-dir lib",
+    "lint": "eslint",
+    "release": "npm run build && release-it --github.release",
+    "release:ci": "npm run release -- --ci --no-git.requireCleanWorkingDir",
+    "release:patch": "npm run release -- patch",
+    "release:minor": "npm run release -- minor",
+    "release:major": "npm run release -- major"
+  },
+  "author": "devx <devx@saucelabs.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/saucelabs/sauce-cucumber-reporter#readme",
+  "dependencies": {
+    "@saucelabs/sauce-json-reporter": "1.1.0",
+    "saucelabs": "^7.0.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.16.0",
+    "@babel/core": "^7.16.0",
+    "@babel/preset-env": "^7.16.4",
+    "@babel/preset-typescript": "^7.16.0",
+    "@cucumber/cucumber": "^8.5.3",
+    "axios": "^0.24.0",
+    "eslint": "^7.32.0",
+    "jest": "^27.2.5",
+    "release-it": "^14.11.6"
+  }
+}

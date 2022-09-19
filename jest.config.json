@@ -1,0 +1,5 @@
+{
+  "testMatch": ["<rootDir>/tests/integration/reporter.spec.js"],
+  "testEnvironment": "node",
+  "testTimeout": 180000
+}
