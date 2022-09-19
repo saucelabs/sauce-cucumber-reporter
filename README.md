@@ -30,12 +30,7 @@ You can also configure using `cucumber.json`. To achieve that, add `'@saucelabs/
     "requireModule": [
       "ts-node/register"
     ],
-    "format": "@saucelabs/cucumber-reporter",
-    "formatOptions": {
-      "suiteName": "my cucumber test",
-      "build": "mybuild",
-      "tags": ["demo", "e2e", "cucumber"]
-    }
+    "format": "@saucelabs/cucumber-reporter"
   }
 }
 ```
@@ -59,7 +54,8 @@ Example `cucumber.json`
       "region": "eu-central-1"
     }
   }
-}```
+}
+```
 
 | Name | Description | Kind |
 | --- | --- | --- |

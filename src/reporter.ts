@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { randomBytes } from 'crypto';
 import * as os from 'os';
-import { EventEmitter } from 'events';
 import SauceLabs from 'saucelabs';
 import { TestRun, Suite, Test } from '@saucelabs/sauce-json-reporter'
 
