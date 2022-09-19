@@ -88,11 +88,11 @@ class SauceReporter extends SummaryFormatter {
         user: process.env.SAUCE_USERNAME,
         key: process.env.SAUCE_ACCESS_KEY,
         region: this.region,
-        tld: this.region === 'staging' ? 'net' : 'com',
         headers: {
           'User-Agent': `cucumber-reporter/${reporterVersion}`
         },
       });
+      this.api.tld = this.region === 'staging' ? 'net' : 'com';
     }
     if (process.env.SAUCE_VIDEO_START_TIME) {
       this.videoStartTime = new Date(process.env.SAUCE_VIDEO_START_TIME).getTime();
