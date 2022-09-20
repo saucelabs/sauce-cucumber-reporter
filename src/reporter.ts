@@ -4,8 +4,6 @@ import * as os from 'os';
 import SauceLabs from 'saucelabs';
 import { TestRun, Suite, Test, Status as SauceStatus } from '@saucelabs/sauce-json-reporter'
 import { SummaryFormatter, formatterHelpers, Status, IFormatterOptions } from '@cucumber/cucumber'
-import { IParsedTestStep } from '@cucumber/cucumber/lib/formatter/helpers/test_case_attempt_parser';
-import { FormatOptions } from '@cucumber/cucumber/lib/formatter';
 import { Envelope } from '@cucumber/messages';
 
 type SauceRegion = 'us-west-1' | 'eu-central-1' | 'staging';
@@ -51,7 +49,7 @@ class SauceReporter extends SummaryFormatter {
   constructor(config: IFormatterOptions) {
     super(config)
 
-    const reporterConfig: FormatOptions = config.parsedArgvOptions;
+    const reporterConfig = config.parsedArgvOptions;
     this.suiteName = reporterConfig?.suiteName || '';
     this.browserName = reporterConfig?.browserName || 'chrome';
     this.build = reporterConfig?.build || '';
@@ -115,7 +113,7 @@ class SauceReporter extends SummaryFormatter {
     }
     this.consoleLog.push(`${curr.name}\t#${suite.name}`)
 
-    parsed.testSteps.forEach((testStep: IParsedTestStep) => {
+    parsed.testSteps.forEach((testStep) => {
       this.consoleLog.push('  ' + testStep.keyword + (testStep.text || '') + ' - ' + Status[testStep.result.status]);
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`)
       const testStatus = testStep.result?.status?.toLowerCase();
@@ -218,7 +216,7 @@ class SauceReporter extends SummaryFormatter {
       this.api?.uploadJobAssets(sessionId, { files: this.assets as unknown as string[] }).then(
         (resp : any) => {
           if (resp.errors) {
-            for (let err of resp.errors) {
+            for (const err of resp.errors) {
               console.error(err);
             }
           }
