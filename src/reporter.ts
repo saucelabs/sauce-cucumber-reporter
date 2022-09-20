@@ -2,9 +2,11 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import SauceLabs from 'saucelabs';
-import { TestRun, Suite, Test } from '@saucelabs/sauce-json-reporter'
-
-const { SummaryFormatter, formatterHelpers, Status } = require('@cucumber/cucumber')
+import { TestRun, Suite, Test, Status as SauceStatus } from '@saucelabs/sauce-json-reporter'
+import { SummaryFormatter, formatterHelpers, Status, IFormatterOptions } from '@cucumber/cucumber'
+import { IParsedTestStep } from '@cucumber/cucumber/lib/formatter/helpers/test_case_attempt_parser';
+import { FormatOptions } from '@cucumber/cucumber/lib/formatter';
+import { Envelope } from '@cucumber/messages';
 
 type SauceRegion = 'us-west-1' | 'eu-central-1' | 'staging';
 
@@ -57,10 +59,10 @@ class SauceReporter extends SummaryFormatter {
   consoleLog: string[];
   passed: boolean;
 
-  constructor(config: any) {
+  constructor(config: IFormatterOptions) {
     super(config)
 
-    const reporterConfig: ReporterConfig = config.parsedArgvOptions;
+    const reporterConfig: FormatOptions = config.parsedArgvOptions;
     this.suiteName = reporterConfig?.suiteName || '';
     this.browserName = reporterConfig?.browserName || 'chrome';
     this.build = reporterConfig?.build || '';
@@ -96,9 +98,7 @@ class SauceReporter extends SummaryFormatter {
       this.videoStartTime = new Date(process.env.SAUCE_VIDEO_START_TIME).getTime();
     }
 
-    config.eventBroadcaster?.on('envelope', (envelope: {
-      testRunFinished: any; testCaseFinished: any 
-    }) => {
+    config.eventBroadcaster?.on('envelope', (envelope: Envelope) => {
       if (envelope.testCaseFinished) {
         this.logTestCase(envelope.testCaseFinished)
       }
@@ -111,33 +111,26 @@ class SauceReporter extends SummaryFormatter {
   logTestCase(testCaseFinished: { testCaseStartedId: any }) {
     const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(testCaseFinished.testCaseStartedId)
     const parsed = formatterHelpers.parseTestCaseAttempt({
-      cwd: this.cwd,
+      //cwd: this.cwd,
       snippetBuilder: this.snippetBuilder, 
       supportCodeLibrary: this.supportCodeLibrary,
       testCaseAttempt 
     })
-    const suite = new Suite(parsed.testCase?.sourceLocation?.uri)
+    const suite = new Suite(parsed.testCase?.sourceLocation?.uri || '')
     const curr = new Suite(parsed.testCase?.name);
     const suiteStatus = parsed.testCase?.worstTestStepResult?.status?.toLowerCase();
-    curr.status = suiteStatus;
+    curr.status = suiteStatus as SauceStatus;
     curr.metadata = {
       attempt: parsed.testCase?.attempt,
       sourceLocation: parsed.testCase?.sourceLocation,
     }
     this.consoleLog.push(`${curr.name}\t#${suite.name}`)
 
-    parsed.testSteps.forEach((testStep: {
-      attachments: Asset[];
-      keyword: string; text: any; result: {
-        duration: any;
-        message: string | undefined;
-        status: string 
-      } 
-    }) => {
+    parsed.testSteps.forEach((testStep: IParsedTestStep) => {
       this.consoleLog.push('  ' + testStep.keyword + (testStep.text || '') + ' - ' + Status[testStep.result.status]);
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`)
-      const testStatus = testStep.result?.status?.toLowerCase() as typeof Status;
-      test.status = testStatus;
+      const testStatus = testStep.result?.status?.toLowerCase();
+      test.status = testStatus as SauceStatus;
       test.output = testStep.result?.message;
       test.duration = this.getDuration(testStep.result?.duration);
       test.attachments = [];
@@ -180,7 +173,6 @@ class SauceReporter extends SummaryFormatter {
         msg = `\nNo results reported to Sauce. $SAUCE_USERNAME and $SAUCE_ACCESS_KEY environment variables must be defined in order for reports to be uploaded to Sauce.`;
       }
       this.log(msg);
-      this.log();
       return;
     }
     const jobUrl = this.getJobUrl(jobId as string, this.region)

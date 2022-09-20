@@ -65,4 +65,4 @@ Example `cucumber.json`
 | region | Sets the region. (Default: `us-west-1`) | `us-west-1` \| `eu-central-1` |
 | upload | Whether to upload report and assets to Sauce (Default: `true`) | boolean |
 | outputFile | The local path to write the sauce test report (Default: `sauce-test-report.json`). | String |
-| suiteName | Sets the suite name | String |
+| suiteName | Sets the suite name (Default: `Unnamed job ${job_id}`). | String |
