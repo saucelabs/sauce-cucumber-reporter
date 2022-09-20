@@ -10,17 +10,6 @@ import { Envelope } from '@cucumber/messages';
 
 type SauceRegion = 'us-west-1' | 'eu-central-1' | 'staging';
 
-type ReporterConfig = {
-  browserName?: string;
-  build?: string;
-  tags?: string[];
-  region?: SauceRegion;
-  tld?: string;
-  outputFile?: string;
-  upload?: boolean;
-  suiteName?: string;
-};
-
 type ReportsRequestBody = {
   name?: string;
   browserName?: string;
