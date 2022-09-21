@@ -251,5 +251,3 @@ export default class SauceReporter extends SummaryFormatter {
     return `https://app.${region}.saucelabs.${tld}/tests/${sessionId}`;
   }
 }
-
-module.exports = SauceReporter
