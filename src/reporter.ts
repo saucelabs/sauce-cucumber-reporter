@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import SauceLabs from 'saucelabs';
 import { TestRun, Suite, Test, Status as SauceStatus } from '@saucelabs/sauce-json-reporter'
-import { SummaryFormatter, formatterHelpers, Status, IFormatterOptions } from '@cucumber/cucumber'
+import { SummaryFormatter, formatterHelpers, IFormatterOptions } from '@cucumber/cucumber'
 import { Duration, Envelope } from '@cucumber/messages';
 
 type SauceRegion = 'us-west-1' | 'eu-central-1' | 'staging';
@@ -32,11 +32,20 @@ export default class SauceReporter extends SummaryFormatter {
   videoStartTime?: number;
   consoleLog: string[];
   passed: boolean;
+  baseLog: (buffer: string | Uint8Array) => void;
+
+  logWrapper(buffer: string | Uint8Array) {
+    this.baseLog(buffer);
+    this.consoleLog.push(Buffer.from(buffer).toString('utf8'));
+  }
 
   constructor(config: IFormatterOptions) {
     super(config)
 
     const reporterConfig = config.parsedArgvOptions;
+
+    this.baseLog = this.log;
+    this.log = this.logWrapper;
     this.suiteName = reporterConfig?.suiteName || '';
     this.browserName = reporterConfig?.browserName || 'chrome';
     this.build = reporterConfig?.build || '';
@@ -97,10 +106,8 @@ export default class SauceReporter extends SummaryFormatter {
       attempt: parsed.testCase?.attempt,
       sourceLocation: parsed.testCase?.sourceLocation,
     }
-    this.consoleLog.push(`${curr.name}\t#${suite.name}`)
 
     parsed.testSteps.forEach((testStep) => {
-      this.consoleLog.push('  ' + testStep.keyword + (testStep.text || '') + ' - ' + Status[testStep.result.status]);
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`)
       const testStatus = testStep.result?.status?.toLowerCase();
       test.status = testStatus === 'skipped' ? SauceStatus.Skipped : (testStatus === 'passed' ? SauceStatus.Passed : SauceStatus.Failed);
@@ -130,8 +137,7 @@ export default class SauceReporter extends SummaryFormatter {
     this.reportToFile(this.testRun)
 
     const id = await this.reportToSauce();
-    this.consoleLog.push(testRunFinished.success ? 'SUCCESS' : 'FAILURE')
-    this.logSauceJob(id as string)
+    this.logSauceJob(id)
     this.log('\n')
   }
 
@@ -139,7 +145,7 @@ export default class SauceReporter extends SummaryFormatter {
     return (duration.seconds * 1000) + (duration.nanos / 1000000);
   }
 
-  logSauceJob (jobId: string) {
+  logSauceJob (jobId: string | undefined) {
     if (!jobId) {
       const hasCredentials = process.env.SAUCE_USERNAME && process.env.SAUCE_USERNAME !== '' && process.env.SAUCE_ACCESS_KEY && process.env.SAUCE_ACCESS_KEY !== '';
       if (!hasCredentials) {
