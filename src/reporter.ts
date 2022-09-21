@@ -73,13 +73,13 @@ export default class SauceReporter extends SummaryFormatter {
       this.videoStartTime = new Date(process.env.SAUCE_VIDEO_START_TIME).getTime();
     }
 
-    config.eventBroadcaster?.on('envelope', (envelope: Envelope) => {
+    config.eventBroadcaster?.on('envelope', async (envelope: Envelope) => {
       if (envelope.testCaseFinished) {
         this.logTestCase(envelope.testCaseFinished)
       }
       if (envelope.testRunFinished) {
         this.endedAt = new Date().toISOString();
-        this.logTestRun(envelope.testRunFinished)
+        await this.logTestRun(envelope.testRunFinished)
       }
     })
   }
