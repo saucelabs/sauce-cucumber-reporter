@@ -87,7 +87,6 @@ export default class SauceReporter extends SummaryFormatter {
   logTestCase(testCaseFinished: { testCaseStartedId: any }) {
     const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(testCaseFinished.testCaseStartedId)
     const parsed = formatterHelpers.parseTestCaseAttempt({
-      //cwd: this.cwd,
       snippetBuilder: this.snippetBuilder, 
       supportCodeLibrary: this.supportCodeLibrary,
       testCaseAttempt 
@@ -120,8 +119,8 @@ export default class SauceReporter extends SummaryFormatter {
         })
       })
       curr.addTest(test);
-      curr.status = this.testRun.computeStatus()
     })
+    curr.status = this.testRun.computeStatus()
     suite.addSuite(curr)
     this.testRun.addSuite(suite);
   }
@@ -149,8 +148,7 @@ export default class SauceReporter extends SummaryFormatter {
       return;
     }
     const jobUrl = this.getJobUrl(jobId as string, this.region)
-    this.log(`\nReported jobs to Sauce Labs:\n`);
-    this.log(jobUrl)
+    this.log(`\nReported jobs to Sauce Labs:\n${jobUrl}`);
   }
 
   reportToFile(report: TestRun) {
