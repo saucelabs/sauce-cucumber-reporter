@@ -127,12 +127,12 @@ export default class SauceReporter extends SummaryFormatter {
       })
       curr.addTest(test);
     })
-    curr.status = this.testRun.computeStatus()
     suite.addSuite(curr)
     this.testRun.addSuite(suite);
   }
 
   async logTestRun(testRunFinished: { success: any; }) {
+    this.testRun.status = this.testRun.computeStatus()
     this.passed = testRunFinished.success;
     this.reportToFile(this.testRun)
 
