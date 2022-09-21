@@ -2,10 +2,11 @@
   "name": "@saucelabs/cucumber-reporter",
   "version": "0.1.0",
   "description": "Reports your tests to Sauce Labs",
-  "main": "lib/reporter.js",
+  "main": "src/reporter.js",
   "files": [
-    "lib",
-    "src"
+    "src/**/*.js",
+    "src/**/*.d.ts",
+    "src/**/*.d.ts.map"
   ],
   "scripts": {
     "test": "jest",

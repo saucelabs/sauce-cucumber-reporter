@@ -4,31 +4,18 @@ import * as os from 'os';
 import SauceLabs from 'saucelabs';
 import { TestRun, Suite, Test, Status as SauceStatus } from '@saucelabs/sauce-json-reporter'
 import { SummaryFormatter, formatterHelpers, Status, IFormatterOptions } from '@cucumber/cucumber'
-import { Envelope } from '@cucumber/messages';
+import { Duration, Envelope } from '@cucumber/messages';
 
 type SauceRegion = 'us-west-1' | 'eu-central-1' | 'staging';
-
-type ReportsRequestBody = {
-  name?: string;
-  browserName?: string;
-  browserVersion?: string;
-  platformName?: string;
-  framework?: string;
-  frameworkVersion?: string;
-  passed?: boolean;
-  startTime: string;
-  endTime: string;
-  build?: string;
-  tags?: string[];
-  suite?: string;
-};
 
 type Asset = {
   filename: string;
   data: Buffer;
 };
 
-class SauceReporter extends SummaryFormatter {
+const framework = 'cucumber';
+
+export default class SauceReporter extends SummaryFormatter {
   testRun: TestRun;
   suiteName: string;
   browserName: string;
@@ -40,8 +27,8 @@ class SauceReporter extends SummaryFormatter {
   assets: Asset[];
   api?: SauceLabs;
   cucumberVersion: string;
-  startedAt?: Date;
-  endedAt?: Date;
+  startedAt?: string;
+  endedAt?: string;
   videoStartTime?: number;
   consoleLog: string[];
   passed: boolean;
@@ -62,6 +49,7 @@ class SauceReporter extends SummaryFormatter {
     this.assets = [];
     this.consoleLog = [];
     this.passed = true;
+    this.startedAt = new Date().toISOString();
 
     let reporterVersion = 'unknown';
     try {
@@ -90,6 +78,7 @@ class SauceReporter extends SummaryFormatter {
         this.logTestCase(envelope.testCaseFinished)
       }
       if (envelope.testRunFinished) {
+        this.endedAt = new Date().toISOString();
         this.logTestRun(envelope.testRunFinished)
       }
     })
@@ -105,8 +94,6 @@ class SauceReporter extends SummaryFormatter {
     })
     const suite = new Suite(parsed.testCase?.sourceLocation?.uri || '')
     const curr = new Suite(parsed.testCase?.name);
-    const suiteStatus = parsed.testCase?.worstTestStepResult?.status?.toLowerCase();
-    curr.status = suiteStatus as SauceStatus;
     curr.metadata = {
       attempt: parsed.testCase?.attempt,
       sourceLocation: parsed.testCase?.sourceLocation,
@@ -117,9 +104,9 @@ class SauceReporter extends SummaryFormatter {
       this.consoleLog.push('  ' + testStep.keyword + (testStep.text || '') + ' - ' + Status[testStep.result.status]);
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`)
       const testStatus = testStep.result?.status?.toLowerCase();
-      test.status = testStatus as SauceStatus;
+      test.status = testStatus === 'skipped' ? SauceStatus.Skipped : (testStatus === 'passed' ? SauceStatus.Passed : SauceStatus.Failed);
       test.output = testStep.result?.message;
-      test.duration = this.getDuration(testStep.result?.duration);
+      test.duration = this.durationToMilliseconds(testStep.result?.duration);
       test.attachments = [];
       testStep.attachments.forEach((attachment: any) => {
         this.assets.push({
@@ -133,6 +120,7 @@ class SauceReporter extends SummaryFormatter {
         })
       })
       curr.addTest(test);
+      curr.status = this.testRun.computeStatus()
     })
     suite.addSuite(curr)
     this.testRun.addSuite(suite);
@@ -142,24 +130,22 @@ class SauceReporter extends SummaryFormatter {
     this.passed = testRunFinished.success;
     this.reportToFile(this.testRun)
 
-    const id = await this.reportToSauce(this.testRun);
+    const id = await this.reportToSauce();
     this.consoleLog.push(testRunFinished.success ? 'SUCCESS' : 'FAILURE')
     this.logSauceJob(id as string)
     this.log('\n')
   }
 
-  getDuration(duration: any) {
-    return (duration.seconds * 1000) + (duration.nanos / 1000000000);
+  durationToMilliseconds(duration: Duration) {
+    return (duration.seconds * 1000) + (duration.nanos / 1000000);
   }
 
   logSauceJob (jobId: string) {
-    if (jobId.length < 1) {
-      let msg = '';
+    if (!jobId) {
       const hasCredentials = process.env.SAUCE_USERNAME && process.env.SAUCE_USERNAME !== '' && process.env.SAUCE_ACCESS_KEY && process.env.SAUCE_ACCESS_KEY !== '';
       if (!hasCredentials) {
-        msg = `\nNo results reported to Sauce. $SAUCE_USERNAME and $SAUCE_ACCESS_KEY environment variables must be defined in order for reports to be uploaded to Sauce.`;
+        this.log(`\nNo results reported to Sauce. $SAUCE_USERNAME and $SAUCE_ACCESS_KEY environment variables must be defined in order for reports to be uploaded to Sauce.`);
       }
-      this.log(msg);
       return;
     }
     const jobUrl = this.getJobUrl(jobId as string, this.region)
@@ -176,21 +162,23 @@ class SauceReporter extends SummaryFormatter {
     report.toFile(this.outputFile);
   }
 
-  async reportToSauce(report: TestRun) : Promise<string | undefined> {
+  async reportToSauce() : Promise<string | undefined> {
     // Currently no reliable way to get the browser version
     const browserVersion = '1.0';
 
-    const jobBody = this.createBody({
+    const jobBody = {
       build: this.build,
-      startedAt: this.startedAt ? this.startedAt.toISOString() : new Date().toISOString(),
-      endedAt: this.endedAt ? this.endedAt.toISOString() : new Date().toISOString(),
-      success: this.passed,
-      suiteName: this.suiteName,
+      startTime: this.startedAt,
+      endTime: this.endedAt,
+      passed: this.passed,
+      name: this.suiteName,
       tags: this.tags,
       browserName: this.browserName,
       browserVersion,
-      cucumberVersion: this.cucumberVersion, 
-    });
+      framework,
+      frameworkVersion: this.cucumberVersion, 
+      platformName: this.getPlatformName(),
+    };
 
     if (this.shouldUpload) {
       const sessionID = await this.createJob(jobBody);
@@ -208,11 +196,12 @@ class SauceReporter extends SummaryFormatter {
     });
 
     this.assets.push({
-      filename: this.outputFile,
+      filename: 'sauce-test-report.json',
       data: Buffer.from(this.testRun.stringify()),
     });
 
     await Promise.all([
+      // Casting this.assets as string[] to fit the definition for files. Will refine this later.
       this.api?.uploadJobAssets(sessionId, { files: this.assets as unknown as string[] }).then(
         (resp : any) => {
           if (resp.errors) {
@@ -234,34 +223,6 @@ class SauceReporter extends SummaryFormatter {
     } catch (e) {
       console.error('Create job failed: ', e);
     }
-  }
-
-  createBody (args: {
-    suiteName: string,
-    startedAt: string,
-    endedAt: string,
-    success: boolean,
-    tags: string[],
-    build: string,
-    browserName: string,
-    browserVersion: string,
-    cucumberVersion: string,
-  }) : ReportsRequestBody {
-
-    return {
-      name: args.suiteName,
-      startTime: args.startedAt,
-      endTime: args.endedAt,
-      framework: 'cucumber',
-      frameworkVersion: args.cucumberVersion,
-      suite: args.suiteName,
-      passed: args.success,
-      tags: args.tags,
-      build: args.build,
-      browserName: args.browserName,
-      browserVersion: args.browserVersion,
-      platformName: this.getPlatformName(),
-    };
   }
 
   getPlatformName () {
