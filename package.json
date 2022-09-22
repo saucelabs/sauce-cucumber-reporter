@@ -1,0 +1,48 @@
+{
+  "name": "@saucelabs/cucumber-reporter",
+  "version": "0.1.0",
+  "description": "Reports your tests to Sauce Labs",
+  "main": "src/reporter.js",
+  "files": [
+    "src/**/*.js",
+    "src/**/*.d.ts",
+    "src/**/*.d.ts.map"
+  ],
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "lint": "eslint .",
+    "release": "npm run build && release-it --github.release",
+    "release:ci": "npm run release -- --ci --no-git.requireCleanWorkingDir",
+    "release:patch": "npm run release -- patch",
+    "release:minor": "npm run release -- minor",
+    "release:major": "npm run release -- major"
+  },
+  "author": "devx <devx@saucelabs.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/saucelabs/sauce-cucumber-reporter#readme",
+  "dependencies": {
+    "@saucelabs/sauce-json-reporter": "1.1.0",
+    "saucelabs": "^7.2.0"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^8.5.3",
+    "@tsconfig/node14": "^1.0.3",
+    "@types/jest": "^29.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.38.0",
+    "@typescript-eslint/parser": "^5.38.0",
+    "axios": "^0.24.0",
+    "eslint": "^8.23.1",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.5",
+    "eslint-plugin-promise": "^6.0.1",
+    "jest": "^29.0.3",
+    "release-it": "^14.11.6",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3"
+  }
+}

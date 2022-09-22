@@ -1,0 +1,18 @@
+{
+  "default": {
+    "requireModule": [
+      "ts-node/register"
+    ],
+    "formatOptions": {
+      "suiteName": "my cucumber test",
+      "build": "mybuild",
+      "tags": ["demo", "e2e", "cucumber"]
+    },
+    "paths": [
+      "**/features/**/*.feature"
+    ],
+    "require": [
+      "tests/integration/features/step_definitions/*.ts"
+    ]
+  }
+}
