@@ -1,6 +1,6 @@
 {
   "name": "@saucelabs/cucumber-reporter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reports your tests to Sauce Labs",
   "main": "src/reporter.js",
   "files": [
