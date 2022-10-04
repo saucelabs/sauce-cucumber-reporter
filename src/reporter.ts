@@ -136,6 +136,10 @@ export default class SauceReporter extends SummaryFormatter {
     this.passed = testRunFinished.success;
     this.reportToFile(this.testRun)
 
+    if (!this.shouldUpload) {
+      return
+    }
+
     const id = await this.reportToSauce();
     this.logSauceJob(id)
     this.log('\n')
@@ -184,13 +188,11 @@ export default class SauceReporter extends SummaryFormatter {
       platformName: this.getPlatformName(),
     };
 
-    if (this.shouldUpload) {
-      const sessionID = await this.createJob(jobBody);
-      if (sessionID) {
-        await this.uploadAssets(sessionID);
-      }
-      return sessionID;
+    const sessionID = await this.createJob(jobBody);
+    if (sessionID) {
+      await this.uploadAssets(sessionID);
     }
+    return sessionID;
   }
 
   async uploadAssets (sessionId: string) {
