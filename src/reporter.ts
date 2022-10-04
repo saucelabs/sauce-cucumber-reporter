@@ -52,13 +52,17 @@ export default class SauceReporter extends SummaryFormatter {
     this.tags = reporterConfig?.tags || [];
     this.region = reporterConfig?.region || 'us-west-1';
     this.outputFile = reporterConfig?.outputFile || 'sauce-test-report.json';
-    this.shouldUpload = reporterConfig?.upload !== false;
     this.cucumberVersion = 'unknown'
     this.testRun = new TestRun();
     this.assets = [];
     this.consoleLog = [];
     this.passed = true;
     this.startedAt = new Date().toISOString();
+    this.shouldUpload = reporterConfig?.upload !== false;
+    // skip uploading report when it's on sauce VM
+    if (process.env.SAUCE_VM === 'true') {
+      this.shouldUpload = false;
+    }
 
     let reporterVersion = 'unknown';
     try {
