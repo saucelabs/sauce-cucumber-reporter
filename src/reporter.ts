@@ -60,7 +60,7 @@ export default class SauceReporter extends SummaryFormatter {
     this.startedAt = new Date().toISOString();
     this.shouldUpload = reporterConfig?.upload !== false;
     // skip uploading report when it's on sauce VM
-    if (process.env.SAUCE_VM === 'true') {
+    if (process.env.SAUCE_VM) {
       this.shouldUpload = false;
     }
 
