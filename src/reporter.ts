@@ -52,13 +52,17 @@ export default class SauceReporter extends SummaryFormatter {
     this.tags = reporterConfig?.tags || [];
     this.region = reporterConfig?.region || 'us-west-1';
     this.outputFile = reporterConfig?.outputFile || 'sauce-test-report.json';
-    this.shouldUpload = reporterConfig?.upload !== false;
     this.cucumberVersion = 'unknown'
     this.testRun = new TestRun();
     this.assets = [];
     this.consoleLog = [];
     this.passed = true;
     this.startedAt = new Date().toISOString();
+    this.shouldUpload = reporterConfig?.upload !== false;
+    // skip uploading report when it's on sauce VM
+    if (process.env.SAUCE_VM) {
+      this.shouldUpload = false;
+    }
 
     let reporterVersion = 'unknown';
     try {
@@ -136,6 +140,10 @@ export default class SauceReporter extends SummaryFormatter {
     this.passed = testRunFinished.success;
     this.reportToFile(this.testRun)
 
+    if (!this.shouldUpload) {
+      return
+    }
+
     const id = await this.reportToSauce();
     this.logSauceJob(id)
     this.log('\n')
@@ -184,13 +192,11 @@ export default class SauceReporter extends SummaryFormatter {
       platformName: this.getPlatformName(),
     };
 
-    if (this.shouldUpload) {
-      const sessionID = await this.createJob(jobBody);
-      if (sessionID) {
-        await this.uploadAssets(sessionID);
-      }
-      return sessionID;
+    const sessionID = await this.createJob(jobBody);
+    if (sessionID) {
+      await this.uploadAssets(sessionID);
     }
+    return sessionID;
   }
 
   async uploadAssets (sessionId: string) {
