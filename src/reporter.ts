@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { TestRun, Suite, Test, Status as SauceStatus } from '@saucelabs/sauce-json-reporter'
-import { SummaryFormatter, formatterHelpers, IFormatterOptions } from '@cucumber/cucumber'
-import { Duration, Envelope } from '@cucumber/messages';
+import {TestRun, Suite, Test, Status as SauceStatus} from '@saucelabs/sauce-json-reporter';
+import {SummaryFormatter, formatterHelpers, IFormatterOptions} from '@cucumber/cucumber';
+import {Duration, Envelope} from '@cucumber/messages';
 import {Asset, TestComposer} from '@saucelabs/testcomposer';
 import stream from 'stream';
 
@@ -34,7 +34,7 @@ export default class SauceReporter extends SummaryFormatter {
   }
 
   constructor(config: IFormatterOptions) {
-    super(config)
+    super(config);
 
     const reporterConfig = config.parsedArgvOptions;
 
@@ -46,7 +46,7 @@ export default class SauceReporter extends SummaryFormatter {
     this.tags = reporterConfig?.tags || [];
     this.region = reporterConfig?.region || 'us-west-1';
     this.outputFile = reporterConfig?.outputFile || 'sauce-test-report.json';
-    this.cucumberVersion = 'unknown'
+    this.cucumberVersion = 'unknown';
     this.testRun = new TestRun();
     this.assets = [];
     this.consoleLog = [];
@@ -63,8 +63,9 @@ export default class SauceReporter extends SummaryFormatter {
     try {
       const packageData = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'));
       reporterVersion = packageData.version;
-    // eslint-disable-next-line no-empty
-    } catch (e) {}
+      // eslint-disable-next-line no-empty
+    } catch (e) {
+    }
 
     this.testComposer = new TestComposer({
       region: this.region,
@@ -79,37 +80,37 @@ export default class SauceReporter extends SummaryFormatter {
 
     config.eventBroadcaster?.on('envelope', async (envelope: Envelope) => {
       if (envelope.testCaseFinished) {
-        this.logTestCase(envelope.testCaseFinished)
+        this.logTestCase(envelope.testCaseFinished);
       }
       if (envelope.testRunFinished) {
         this.endedAt = new Date().toISOString();
-        await this.logTestRun(envelope.testRunFinished)
+        await this.logTestRun(envelope.testRunFinished);
       }
-    })
+    });
   }
 
-  logTestCase(testCaseFinished: { testCaseStartedId: any }) {
-    const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(testCaseFinished.testCaseStartedId)
+  logTestCase(testCaseFinished: { testCaseStartedId: string }) {
+    const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(testCaseFinished.testCaseStartedId);
     const parsed = formatterHelpers.parseTestCaseAttempt({
       snippetBuilder: this.snippetBuilder,
       supportCodeLibrary: this.supportCodeLibrary,
       testCaseAttempt
-    })
-    const suite = new Suite(parsed.testCase?.sourceLocation?.uri || '')
+    });
+    const suite = new Suite(parsed.testCase?.sourceLocation?.uri || '');
     const curr = new Suite(parsed.testCase?.name);
     curr.metadata = {
       attempt: parsed.testCase?.attempt,
       sourceLocation: parsed.testCase?.sourceLocation,
-    }
+    };
 
     parsed.testSteps.forEach((testStep) => {
-      const test = new Test(`${testStep.keyword}${testStep.text || ''}`)
+      const test = new Test(`${testStep.keyword}${testStep.text || ''}`);
       const testStatus = testStep.result?.status?.toLowerCase();
       test.status = testStatus === 'skipped' ? SauceStatus.Skipped : (testStatus === 'passed' ? SauceStatus.Passed : SauceStatus.Failed);
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
       test.attachments = [];
-      testStep.attachments.forEach((attachment: any) => {
+      testStep.attachments.forEach((attachment) => {
         const r = new stream.Readable();
         r.push(attachment.body);
         r.push(null);
@@ -123,20 +124,20 @@ export default class SauceReporter extends SummaryFormatter {
           contentType: attachment.mediaType,
           path: ''
         });
-      })
+      });
       curr.addTest(test);
-    })
-    suite.addSuite(curr)
+    });
+    suite.addSuite(curr);
     this.testRun.addSuite(suite);
   }
 
-  async logTestRun(testRunFinished: { success: any; }) {
-    this.testRun.status = this.testRun.computeStatus()
+  async logTestRun(testRunFinished: { success: boolean; }) {
+    this.testRun.status = this.testRun.computeStatus();
     this.passed = testRunFinished.success;
-    this.reportToFile(this.testRun)
+    this.reportToFile(this.testRun);
 
     if (!this.shouldUpload) {
-      return
+      return;
     }
 
     try {
@@ -144,7 +145,7 @@ export default class SauceReporter extends SummaryFormatter {
       this.log(`Report created: ${job.url}\n`);
     } catch (e) {
       if (e instanceof Error) {
-        this.log(`Failed to report to Sauce Labs: ${e.message}\n`)
+        this.log(`Failed to report to Sauce Labs: ${e.message}\n`);
       }
     }
   }
@@ -158,7 +159,7 @@ export default class SauceReporter extends SummaryFormatter {
       return;
     }
 
-    fs.mkdirSync(path.dirname(this.outputFile), { recursive: true });
+    fs.mkdirSync(path.dirname(this.outputFile), {recursive: true});
     report.toFile(this.outputFile);
   }
 
@@ -177,9 +178,7 @@ export default class SauceReporter extends SummaryFormatter {
       platformName: this.getPlatformName()
     });
 
-    if (job) {
-      await this.uploadAssets(job.id);
-    }
+    await this.uploadAssets(job.id);
 
     return job;
   }
@@ -215,7 +214,7 @@ export default class SauceReporter extends SummaryFormatter {
     );
   }
 
-  getPlatformName () {
+  getPlatformName() {
     switch (os.platform()) {
       case 'darwin':
         return `Mac ${os.release()}`;
