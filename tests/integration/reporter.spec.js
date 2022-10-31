@@ -12,6 +12,9 @@ let output
 
 describe('runs tests on cloud', function () {
   beforeAll(async function () {
+    expect(process.env.SAUCE_USERNAME).toBeDefined();
+    expect(process.env.SAUCE_ACCESS_KEY).toBeDefined();
+
     const cucumberRunCommand = 'npx cucumber-js'
     const format = path.join(process.cwd(), 'src/reporter.ts')
     const args = `--config tests/integration/cucumber.json --format ${format} --publish-quiet`
