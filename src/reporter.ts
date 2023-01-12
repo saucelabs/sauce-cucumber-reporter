@@ -100,6 +100,9 @@ export default class SauceReporter extends SummaryFormatter {
       });
     } catch (e) {
       console.error('failed to parse test data: ', e);
+      if (e instanceof TypeError) {
+        console.warn('`paths` field might be set multiple times in your config. Please check sauce config as well as Cucumber.js config file.');
+      }
       return;
     }
     const suite = new Suite(parsed.testCase?.sourceLocation?.uri || '');
