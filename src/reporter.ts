@@ -91,11 +91,17 @@ export default class SauceReporter extends SummaryFormatter {
 
   logTestCase(testCaseFinished: { testCaseStartedId: string }) {
     const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(testCaseFinished.testCaseStartedId);
-    const parsed = formatterHelpers.parseTestCaseAttempt({
-      snippetBuilder: this.snippetBuilder,
-      supportCodeLibrary: this.supportCodeLibrary,
-      testCaseAttempt
-    });
+    let parsed: any;
+    try {
+      parsed = formatterHelpers.parseTestCaseAttempt({
+        snippetBuilder: this.snippetBuilder,
+        supportCodeLibrary: this.supportCodeLibrary,
+        testCaseAttempt
+      });
+    } catch (e) {
+      console.error('failed to parse test data: ', e);
+      return;
+    }
     const suite = new Suite(parsed.testCase?.sourceLocation?.uri || '');
     const curr = new Suite(parsed.testCase?.name);
     curr.metadata = {
@@ -103,14 +109,14 @@ export default class SauceReporter extends SummaryFormatter {
       sourceLocation: parsed.testCase?.sourceLocation,
     };
 
-    parsed.testSteps.forEach((testStep) => {
+    parsed.testSteps.forEach((testStep: any) => {
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`);
       const testStatus = testStep.result?.status?.toLowerCase();
       test.status = testStatus === 'skipped' ? SauceStatus.Skipped : (testStatus === 'passed' ? SauceStatus.Passed : SauceStatus.Failed);
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
       test.attachments = [];
-      testStep.attachments.forEach((attachment) => {
+      testStep.attachments.forEach((attachment: any) => {
         const r = new stream.Readable();
         r.push(attachment.body);
         r.push(null);
@@ -151,7 +157,7 @@ export default class SauceReporter extends SummaryFormatter {
   }
 
   durationToMilliseconds(duration: Duration) {
-    return (duration.seconds * 1000) + (duration.nanos / 1000000);
+    return Math.round((duration.seconds * 1000) + (duration.nanos / 1000000));
   }
 
   reportToFile(report: TestRun) {
