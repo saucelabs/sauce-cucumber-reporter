@@ -101,7 +101,7 @@ export default class SauceReporter extends SummaryFormatter {
     } catch (e) {
       console.error('failed to parse test data: ', e);
       if (e instanceof TypeError) {
-        console.warn('\n\x1b[33m`paths` field might be set multiple times in your config. Please check your Cucumber.js config file.\n\x1b[0m');
+        console.warn('\n\n`paths` field might be set multiple times in your configuration file. Please check your Cucumber.js config file.\n');
       }
       return;
     }
