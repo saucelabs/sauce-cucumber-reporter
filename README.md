@@ -20,7 +20,7 @@ Your Sauce Labs Username and Access Key are available from your
 
 Add to Cucumber formatter
 ```
-npx cucumber test  --format=@saucelabs/cucumber-reporter
+npx cucumber-js --format=@saucelabs/cucumber-reporter
 ```
 
 You can also configure using `cucumber.json`. To achieve that, add `'@saucelabs/cucumber-reporter'` to the reporter section of your configuration:
