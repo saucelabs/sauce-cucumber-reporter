@@ -20,6 +20,6 @@ module.exports = {
     ],
     rules: {
         semi: "error",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "warn"
     }
 };
