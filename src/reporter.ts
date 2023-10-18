@@ -91,7 +91,6 @@ export default class SauceReporter extends SummaryFormatter {
 
   logTestCase(testCaseFinished: { testCaseStartedId: string }) {
     const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(testCaseFinished.testCaseStartedId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsed: any;
     try {
       parsed = formatterHelpers.parseTestCaseAttempt({
@@ -113,7 +112,6 @@ export default class SauceReporter extends SummaryFormatter {
       sourceLocation: parsed.testCase?.sourceLocation,
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parsed.testSteps.forEach((testStep: any) => {
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`);
       const testStatus = testStep.result?.status?.toLowerCase();
@@ -121,7 +119,6 @@ export default class SauceReporter extends SummaryFormatter {
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
       test.attachments = [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       testStep.attachments.forEach((attachment: any) => {
         const r = new stream.Readable();
         r.push(attachment.body);
