@@ -78,8 +78,9 @@ export default class SauceReporter extends SummaryFormatter {
         fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
       );
       reporterVersion = packageData.version;
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
+    } catch (e) {
+      /* empty */
+    }
 
     this.testComposer = new TestComposer({
       region: this.region,
