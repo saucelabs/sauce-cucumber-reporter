@@ -1,5 +1,5 @@
 export class Greeter {
   sayHello() {
-    return "hello";
+    return 'hello';
   }
 }
