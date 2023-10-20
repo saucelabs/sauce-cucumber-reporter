@@ -2,16 +2,15 @@
   "name": "@saucelabs/cucumber-reporter",
   "version": "1.0.0",
   "description": "Reports your tests to Sauce Labs",
-  "main": "src/reporter.js",
+  "main": "lib/reporter.js",
   "files": [
-    "src/**/*.js",
-    "src/**/*.d.ts",
-    "src/**/*.d.ts.map"
+    "lib"
   ],
   "scripts": {
     "test": "jest",
-    "build": "tsc",
-    "lint": "eslint .",
+    "build": "npx rimraf lib && tsc",
+    "lint": "prettier --check '**/*.{js,ts,mjs,cjs}' && eslint .",
+    "fmt": "prettier --write '**/*.{js,ts,mjs,cjs}'",
     "release": "npm run build && release-it --github.release",
     "release:ci": "npm run release -- --ci --no-git.requireCleanWorkingDir",
     "release:patch": "npm run release -- patch",
@@ -36,12 +35,13 @@
     "@typescript-eslint/parser": "^6.8.0",
     "axios": "^1.5.1",
     "eslint": "^8.51.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.28.1",
-    "eslint-plugin-n": "^16.2.0",
-    "eslint-plugin-promise": "^6.1.1",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-jest": "^27.4.2",
+    "eslint-plugin-prettier": "^5.0.1",
     "jest": "^29.7.0",
+    "prettier": "^3.0.3",
     "release-it": "^16.2.1",
+    "rimraf": "^5.0.5",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }
