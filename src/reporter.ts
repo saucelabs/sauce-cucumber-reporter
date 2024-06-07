@@ -140,8 +140,8 @@ export default class SauceReporter extends SummaryFormatter {
         testStatus === 'skipped'
           ? SauceStatus.Skipped
           : testStatus === 'passed'
-          ? SauceStatus.Passed
-          : SauceStatus.Failed;
+            ? SauceStatus.Passed
+            : SauceStatus.Failed;
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
       test.attachments = [];
