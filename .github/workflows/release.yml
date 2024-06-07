@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       releaseType:
-        description: 'Release'
+        description: "Release"
         required: false
-        default: 'patch'
+        default: "patch"
 
 jobs:
   publish-release:
@@ -21,8 +21,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
-          cache: 'npm'
+          node-version-file: ".nvmrc"
+          cache: "npm"
 
       - name: Install Dependencies
         run: npm ci
