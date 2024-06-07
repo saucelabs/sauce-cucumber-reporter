@@ -11,9 +11,6 @@ module.exports = ts.config(
     plugins: {
       jest: jest,
     },
-    rules: {
-      'no-undef': 'off',
-    },
   },
   {
     ignores: ['lib/**'],
@@ -23,6 +20,7 @@ module.exports = ts.config(
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
+      'no-undef': 'warn',
     },
   },
   {
