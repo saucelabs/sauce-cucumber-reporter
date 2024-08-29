@@ -12,7 +12,9 @@ let output;
 
 describe('runs tests on cloud', function () {
   beforeAll(async function () {
+    // eslint-disable-next-line jest/no-standalone-expect
     expect(process.env.SAUCE_USERNAME).toBeDefined();
+    // eslint-disable-next-line jest/no-standalone-expect
     expect(process.env.SAUCE_ACCESS_KEY).toBeDefined();
 
     const cucumberRunCommand = 'npx cucumber-js';
