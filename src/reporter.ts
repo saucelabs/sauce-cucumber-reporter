@@ -164,12 +164,13 @@ export default class SauceReporter extends SummaryFormatter {
       });
       curr.addTest(test);
     });
-    this.calculateStartTimes(curr);
+    this.calculateStartTime(curr);
     suite.addSuite(curr);
     this.testRun.addSuite(suite);
   }
 
-  calculateStartTimes(suite: Suite) {
+  // Calculate each test's start time using the suite's end time and test duration.
+  calculateStartTime(suite: Suite) {
     if (!this.suiteEndAt) {
       return;
     }
