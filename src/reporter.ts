@@ -32,8 +32,8 @@ export default class SauceReporter extends SummaryFormatter {
   cucumberVersion: string;
   startedAt?: string;
   endedAt?: string;
+  suiteEndAt?: Date;
   videoStartTime?: number;
-  videoTimestamp?: number;
   consoleLog: string[];
   passed: boolean;
   baseLog: (buffer: string | Uint8Array) => void;
@@ -98,6 +98,7 @@ export default class SauceReporter extends SummaryFormatter {
 
     config.eventBroadcaster?.on('envelope', async (envelope: Envelope) => {
       if (envelope.testCaseFinished) {
+        this.suiteEndAt = new Date();
         this.logTestCase(envelope.testCaseFinished);
       }
       if (envelope.testRunFinished) {
@@ -134,7 +135,6 @@ export default class SauceReporter extends SummaryFormatter {
       sourceLocation: parsed.testCase?.sourceLocation,
     };
 
-    let startTime: Date;
     parsed.testSteps.forEach((testStep: any) => {
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`);
       const testStatus = testStep.result?.status?.toLowerCase();
@@ -146,14 +146,6 @@ export default class SauceReporter extends SummaryFormatter {
             : SauceStatus.Failed;
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
-      startTime = startTime
-        ? new Date(startTime.getTime() + test.duration)
-        : new Date();
-      test.startTime = startTime;
-      if (this.videoStartTime) {
-        test.videoTimestamp =
-          (test.startTime.getTime() - this.videoStartTime) / 1000;
-      }
       test.attachments = [];
       testStep.attachments.forEach((attachment: any) => {
         const r = new stream.Readable();
@@ -172,8 +164,29 @@ export default class SauceReporter extends SummaryFormatter {
       });
       curr.addTest(test);
     });
+    this.calculateStartTimes(curr);
     suite.addSuite(curr);
     this.testRun.addSuite(suite);
+  }
+
+  calculateStartTimes(suite: Suite) {
+    if (!this.suiteEndAt) {
+      return;
+    }
+    let currentTime = new Date(this.suiteEndAt);
+
+    // Use reduceRight to iterate through the testSteps from last to first.
+    suite.tests.reduceRight((_, test) => {
+      test.startTime = new Date(currentTime.getTime() - test.duration);
+      if (this.videoStartTime) {
+        test.videoTimestamp =
+          (test.startTime.getTime() - this.videoStartTime) / 1000;
+      }
+      currentTime = test.startTime;
+
+      // We don't need to return anything since we're mutating the original array.
+      return _;
+    }, null);
   }
 
   async logTestRun(testRunFinished: { success: boolean }) {
