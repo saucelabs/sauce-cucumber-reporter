@@ -176,7 +176,7 @@ export default class SauceReporter extends SummaryFormatter {
     }
     let currentTime = new Date(this.suiteEndAt);
 
-    // Use reduceRight to iterate through the testSteps from last to first.
+    // Use reduceRight to iterate through the tests from last to first.
     suite.tests.reduceRight((_, test) => {
       test.startTime = new Date(currentTime.getTime() - test.duration);
       if (this.videoStartTime) {
