@@ -169,8 +169,7 @@ export default class SauceReporter extends SummaryFormatter {
     this.testRun.addSuite(suite);
   }
 
-  // Calculate each test's startTime and videoTimestamp
-  // using the suite's end time and test duration.
+  // Calculate each test's startTime and videoTimestamp.
   calculateTestTiming(suite: Suite) {
     if (!this.suiteEndAt) {
       return;
