@@ -134,6 +134,7 @@ export default class SauceReporter extends SummaryFormatter {
       sourceLocation: parsed.testCase?.sourceLocation,
     };
 
+    let startTime: Date;
     parsed.testSteps.forEach((testStep: any) => {
       const test = new Test(`${testStep.keyword}${testStep.text || ''}`);
       const testStatus = testStep.result?.status?.toLowerCase();
@@ -145,8 +146,13 @@ export default class SauceReporter extends SummaryFormatter {
             : SauceStatus.Failed;
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
+      startTime = startTime
+        ? new Date(startTime.getTime() + test.duration)
+        : new Date();
+      test.startTime = startTime;
       if (this.videoStartTime) {
-        test.videoTimestamp = (Date.now() - this.videoStartTime) / 1000;
+        test.videoTimestamp =
+          (test.startTime.getTime() - this.videoStartTime) / 1000;
       }
       test.attachments = [];
       testStep.attachments.forEach((attachment: any) => {
