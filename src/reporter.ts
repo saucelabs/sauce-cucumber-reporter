@@ -32,7 +32,6 @@ export default class SauceReporter extends SummaryFormatter {
   cucumberVersion: string;
   startedAt?: string;
   endedAt?: string;
-  suiteEndAt?: Date;
   videoStartTime?: number;
   consoleLog: string[];
   passed: boolean;
@@ -98,7 +97,6 @@ export default class SauceReporter extends SummaryFormatter {
 
     config.eventBroadcaster?.on('envelope', async (envelope: Envelope) => {
       if (envelope.testCaseFinished) {
-        this.suiteEndAt = new Date();
         this.logTestCase(envelope.testCaseFinished);
       }
       if (envelope.testRunFinished) {
@@ -109,6 +107,7 @@ export default class SauceReporter extends SummaryFormatter {
   }
 
   logTestCase(testCaseFinished: { testCaseStartedId: string }) {
+    const endTime = new Date();
     const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(
       testCaseFinished.testCaseStartedId,
     );
@@ -164,26 +163,23 @@ export default class SauceReporter extends SummaryFormatter {
       });
       curr.addTest(test);
     });
-    this.calculateTestTiming(curr);
+    this.calculateTestTiming(curr, endTime);
     suite.addSuite(curr);
     this.testRun.addSuite(suite);
   }
 
   // Calculate each test's startTime and videoTimestamp.
-  calculateTestTiming(suite: Suite) {
-    if (!this.suiteEndAt) {
-      return;
-    }
-    let endTime = new Date(this.suiteEndAt);
+  calculateTestTiming(suite: Suite, endTime: Date) {
+    let currEndTime = endTime;
 
     // Use reduceRight to iterate through the tests from last to first.
     suite.tests.reduceRight((_, test) => {
-      test.startTime = new Date(endTime.getTime() - test.duration);
+      test.startTime = new Date(currEndTime.getTime() - test.duration);
       if (this.videoStartTime) {
         test.videoTimestamp =
           (test.startTime.getTime() - this.videoStartTime) / 1000;
       }
-      endTime = test.startTime;
+      currEndTime = test.startTime;
 
       // We don't need to return anything since we're mutating the original array.
       return _;
