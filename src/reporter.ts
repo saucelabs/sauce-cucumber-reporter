@@ -33,6 +33,7 @@ export default class SauceReporter extends SummaryFormatter {
   startedAt?: string;
   endedAt?: string;
   videoStartTime?: number;
+  videoTimestamp?: number;
   consoleLog: string[];
   passed: boolean;
   baseLog: (buffer: string | Uint8Array) => void;
@@ -144,6 +145,9 @@ export default class SauceReporter extends SummaryFormatter {
             : SauceStatus.Failed;
       test.output = testStep.result?.message;
       test.duration = this.durationToMilliseconds(testStep.result?.duration);
+      if (this.videoStartTime) {
+        test.videoTimestamp = (Date.now() - this.videoStartTime) / 1000;
+      }
       test.attachments = [];
       testStep.attachments.forEach((attachment: any) => {
         const r = new stream.Readable();
