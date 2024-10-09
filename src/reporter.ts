@@ -174,16 +174,16 @@ export default class SauceReporter extends SummaryFormatter {
     if (!this.suiteEndAt) {
       return;
     }
-    let currentTime = new Date(this.suiteEndAt);
+    let endTime = new Date(this.suiteEndAt);
 
     // Use reduceRight to iterate through the tests from last to first.
     suite.tests.reduceRight((_, test) => {
-      test.startTime = new Date(currentTime.getTime() - test.duration);
+      test.startTime = new Date(endTime.getTime() - test.duration);
       if (this.videoStartTime) {
         test.videoTimestamp =
           (test.startTime.getTime() - this.videoStartTime) / 1000;
       }
-      currentTime = test.startTime;
+      endTime = test.startTime;
 
       // We don't need to return anything since we're mutating the original array.
       return _;
