@@ -24,6 +24,10 @@ const isAccountSet = () => {
 
 export default class SauceReporter extends SummaryFormatter {
   testRun: TestRun;
+  name: string;
+  /**
+   * @deprecated Use `name` instead.
+   */
   suiteName: string;
   browserName: string;
   build: string;
@@ -54,6 +58,10 @@ export default class SauceReporter extends SummaryFormatter {
     this.baseLog = this.log;
     this.log = this.logWrapper;
     this.suiteName = reporterConfig?.suiteName || '';
+    this.name = reporterConfig?.name || '';
+    if (this.suiteName && !this.name) {
+      this.name = this.suiteName;
+    }
     this.browserName = reporterConfig?.browserName || 'chrome';
     this.build = reporterConfig?.build || '';
     this.tags = reporterConfig?.tags || [];
@@ -211,7 +219,7 @@ export default class SauceReporter extends SummaryFormatter {
 
   async reportToSauce() {
     const job = await this.testComposer?.createReport({
-      name: this.suiteName,
+      name: this.name,
       startTime: this.startedAt || '',
       endTime: this.endedAt || '',
       framework: 'cucumber',

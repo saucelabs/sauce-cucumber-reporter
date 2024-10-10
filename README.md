@@ -45,7 +45,7 @@ Example `cucumber.json`:
     "requireModule": ["ts-node/register"],
     "format": "@saucelabs/cucumber-reporter",
     "formatOptions": {
-      "suiteName": "my cucumber test",
+      "name": "my cucumber test",
       "build": "mybuild",
       "tags": ["demo", "e2e", "cucumber"],
       "region": "eu-central-1"
@@ -64,4 +64,4 @@ Configuration Parameters:
 | `region`      | Sets the region. Default: `us-west-1`.                                            | `String`   |
 | `upload`      | Whether to upload report and assets to Sauce. Default: `true`.                    | `boolean`  |
 | `outputFile`  | The local path to write the sauce test report. Default: `sauce-test-report.json`. | `String`   |
-| `suiteName`   | Sets the suite name. Default: `Unnamed job ${job_id}`.                            | `String`   |
+| `name`        | Sets the job name. Default: `Unnamed job ${job_id}`.                              | `String`   |
