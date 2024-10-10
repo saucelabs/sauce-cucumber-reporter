@@ -171,19 +171,17 @@ export default class SauceReporter extends SummaryFormatter {
   // Calculate each test's startTime and videoTimestamp.
   calculateTestTiming(suite: Suite, endTime: Date) {
     let currEndTime = endTime;
+    for (let i = suite.tests.length - 1; i >= 0; i--) {
+      const test = suite.tests[i];
+      const startTime = new Date(currEndTime.getTime() - test.duration);
 
-    // Use reduceRight to iterate through the tests from last to first.
-    suite.tests.reduceRight((_, test) => {
-      test.startTime = new Date(currEndTime.getTime() - test.duration);
+      suite.tests[i].startTime = startTime;
       if (this.videoStartTime) {
-        test.videoTimestamp =
-          (test.startTime.getTime() - this.videoStartTime) / 1000;
+        suite.tests[i].videoTimestamp =
+          (startTime.getTime() - this.videoStartTime) / 1000;
       }
       currEndTime = test.startTime;
-
-      // We don't need to return anything since we're mutating the original array.
-      return _;
-    }, null);
+    }
   }
 
   async logTestRun(testRunFinished: { success: boolean }) {
