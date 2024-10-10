@@ -177,7 +177,7 @@ export default class SauceReporter extends SummaryFormatter {
     this.reportToFile(this.testRun);
 
     if (!this.shouldUpload) {
-      if (!isAccountSet()) {
+      if (!process.env.SAUCE_VM && !isAccountSet()) {
         console.warn(
           'Credentials not set! SAUCE_USERNAME and SAUCE_ACCESS_KEY environment ' +
             'variables must be defined in order for reports to be uploaded to Sauce Labs.',
