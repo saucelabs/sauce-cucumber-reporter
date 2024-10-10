@@ -18,6 +18,10 @@ import stream from 'stream';
 
 type SauceRegion = 'us-west-1' | 'eu-central-1' | 'staging';
 
+const isAccountSet = () => {
+  return process.env.SAUCE_USERNAME && process.env.SAUCE_ACCESS_KEY;
+};
+
 export default class SauceReporter extends SummaryFormatter {
   testRun: TestRun;
   suiteName: string;
@@ -28,7 +32,7 @@ export default class SauceReporter extends SummaryFormatter {
   outputFile: string;
   shouldUpload: boolean;
   assets: Asset[];
-  testComposer: TestComposer;
+  testComposer?: TestComposer;
   cucumberVersion: string;
   startedAt?: string;
   endedAt?: string;
@@ -64,30 +68,12 @@ export default class SauceReporter extends SummaryFormatter {
     this.shouldUpload = reporterConfig?.upload !== false;
 
     // Skip uploads on sauce VM or when credentials aren't set.
-    if (
-      process.env.SAUCE_VM ||
-      !process.env.SAUCE_USERNAME ||
-      !process.env.SAUCE_ACCESS_KEY
-    ) {
+    if (process.env.SAUCE_VM || !isAccountSet()) {
       this.shouldUpload = false;
     }
-
-    let reporterVersion = 'unknown';
-    try {
-      const packageData = JSON.parse(
-        fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
-      );
-      reporterVersion = packageData.version;
-    } catch (e) {
-      /* empty */
+    if (isAccountSet()) {
+      this.setupTestComposer();
     }
-
-    this.testComposer = new TestComposer({
-      region: this.region,
-      username: process.env.SAUCE_USERNAME || '',
-      accessKey: process.env.SAUCE_ACCESS_KEY || '',
-      headers: { 'User-Agent': `cucumber-reporter/${reporterVersion}` },
-    });
 
     if (process.env.SAUCE_VIDEO_START_TIME) {
       this.videoStartTime = new Date(
@@ -103,6 +89,25 @@ export default class SauceReporter extends SummaryFormatter {
         this.endedAt = new Date().toISOString();
         await this.logTestRun(envelope.testRunFinished);
       }
+    });
+  }
+
+  setupTestComposer() {
+    let reporterVersion = 'unknown';
+    try {
+      const packageData = JSON.parse(
+        fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf-8'),
+      );
+      reporterVersion = packageData.version;
+    } catch (e) {
+      /* empty */
+    }
+
+    this.testComposer = new TestComposer({
+      region: this.region,
+      username: process.env.SAUCE_USERNAME || '',
+      accessKey: process.env.SAUCE_ACCESS_KEY || '',
+      headers: { 'User-Agent': `cucumber-reporter/${reporterVersion}` },
     });
   }
 
@@ -172,15 +177,21 @@ export default class SauceReporter extends SummaryFormatter {
     this.reportToFile(this.testRun);
 
     if (!this.shouldUpload) {
+      if (!process.env.SAUCE_VM && !isAccountSet()) {
+        console.warn(
+          'Credentials not set! SAUCE_USERNAME and SAUCE_ACCESS_KEY environment ' +
+            'variables must be defined in order for reports to be uploaded to Sauce Labs.',
+        );
+      }
       return;
     }
 
     try {
       const job = await this.reportToSauce();
-      this.log(`Report created: ${job.url}\n`);
+      this.log(`\nReport created: ${job?.url}\n`);
     } catch (e) {
       if (e instanceof Error) {
-        this.log(`Failed to report to Sauce Labs: ${e.message}\n`);
+        this.log(`\nFailed to report to Sauce Labs: ${e.message}\n`);
       }
     }
   }
@@ -199,7 +210,7 @@ export default class SauceReporter extends SummaryFormatter {
   }
 
   async reportToSauce() {
-    const job = await this.testComposer.createReport({
+    const job = await this.testComposer?.createReport({
       name: this.suiteName,
       startTime: this.startedAt || '',
       endTime: this.endedAt || '',
@@ -213,12 +224,14 @@ export default class SauceReporter extends SummaryFormatter {
       platformName: this.getPlatformName(),
     });
 
+    if (!job || !job.id) {
+      return;
+    }
     await this.uploadAssets(job.id);
-
     return job;
   }
 
-  async uploadAssets(sessionId: string) {
+  async uploadAssets(jobId: string) {
     const logReadable = new stream.Readable();
     logReadable.push(this.consoleLog.join('\n').toString());
     logReadable.push(null);
@@ -238,7 +251,7 @@ export default class SauceReporter extends SummaryFormatter {
       },
     );
 
-    await this.testComposer.uploadAssets(sessionId, this.assets).then(
+    await this.testComposer?.uploadAssets(jobId, this.assets).then(
       (resp) => {
         if (resp.errors) {
           for (const err of resp.errors) {
