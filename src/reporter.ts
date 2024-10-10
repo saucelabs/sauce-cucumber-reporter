@@ -120,6 +120,7 @@ export default class SauceReporter extends SummaryFormatter {
   }
 
   logTestCase(testCaseFinished: { testCaseStartedId: string }) {
+    const endTime = new Date();
     const testCaseAttempt = this.eventDataCollector.getTestCaseAttempt(
       testCaseFinished.testCaseStartedId,
     );
@@ -175,8 +176,25 @@ export default class SauceReporter extends SummaryFormatter {
       });
       curr.addTest(test);
     });
+    this.calculateTestTiming(curr, endTime);
     suite.addSuite(curr);
     this.testRun.addSuite(suite);
+  }
+
+  // Calculate each test's startTime and videoTimestamp.
+  calculateTestTiming(suite: Suite, endTime: Date) {
+    let currEndTime = endTime;
+    for (let i = suite.tests.length - 1; i >= 0; i--) {
+      const test = suite.tests[i];
+      const startTime = new Date(currEndTime.getTime() - test.duration);
+
+      suite.tests[i].startTime = startTime;
+      if (this.videoStartTime) {
+        suite.tests[i].videoTimestamp =
+          (startTime.getTime() - this.videoStartTime) / 1000;
+      }
+      currEndTime = test.startTime;
+    }
   }
 
   async logTestRun(testRunFinished: { success: boolean }) {
